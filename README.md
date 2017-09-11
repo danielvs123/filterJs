@@ -6,7 +6,8 @@ USAGE:
 filter.js is required
 filter.js需要被引用
 
-        加载图片
+        
+        加载图片
         filter.loadImgDiv("读取的img","嵌套在的父页面",宽度||不是必须，高度||不是必须);
 
         调用加权灰度
@@ -32,3 +33,7 @@ filter.js需要被引用
         雾化算法
         filter.fog(pixel);
 <img src="https://raw.githubusercontent.com/danielvs123/filterJs/master/demo/fog.jpeg" width = "20%;" />
+
+        高斯模糊
+        filter.gaussBlur();
+<img src="https://raw.githubusercontent.com/danielvs123/filterJs/master/demo/gauss.jpeg" width = "20%;" />

@@ -120,6 +120,85 @@
         targetCtx.putImageData(imgData,0,0);
     };
 
+    //老照片算法
+    filter.oldPhoto = function(){
+        targetCtx.putImageData(createOverlay(153,253,153,188),0,0);
+        //targetCtx.putImageData(AlphaBlend(imgData,createOverlay(153,253,153,255),0.5),0,0);
+    };
+
+    //高斯特效
+    filter.gaussBlur = function(){
+        clearCanvas();
+        var emptyData = createOverlay(0,0,0,255),
+            delta = 2,
+            blur_percent =  0.84089642,
+            blurArr = setBlurArr(blur_percent,delta),
+            thisX = 0,thisY = 0;
+        for (var i=0;i<imgWidth;i++){
+            for (var j=0;j<imgHeight;j++){
+                var averageR = 0,averageG = 0,averageB = 0;
+                var percentageArr = 0;
+                for (var dx = -delta;dx<=delta;dx++){
+                    for(var dy=-delta;dy<=delta;dy++){
+                        var currentL = (2*delta+1)*(dy+delta)+(dx+delta);
+                        var deltaX = i+ dx,
+                            deltaY = j+ dy,
+                            deltaNumber = 4*(deltaX + deltaY*(imgWidth));
+                        if ((i+dx)>=0&&(i+dx)<= imgWidth&&(j+dy)>=0&&(j+dy)<= imgHeight){
+                            averageR += imgData.data[deltaNumber]*blurArr[currentL];
+                            averageG += imgData.data[deltaNumber+1]*blurArr[currentL];
+                            averageB += imgData.data[deltaNumber+2]*blurArr[currentL];
+                        }else{
+                            averageR += 255*blurArr[currentL];
+                            averageG += 255*blurArr[currentL];
+                            averageB += 255*blurArr[currentL];
+                        }
+                        percentageArr+= blurArr[currentL];
+                    }
+                }
+                var currentPixel = 4*imgWidth*j + 4* i;
+                emptyData.data[currentPixel] = averageR;
+                emptyData.data[currentPixel+1] = averageG;
+                emptyData.data[currentPixel+2] = averageB;
+            }
+        }
+        console.log(emptyData.data);
+        console.log(imgData.data);
+        targetCtx.putImageData(emptyData,0,0);
+    };
+
+    //用来制作叠加图层
+    function createOverlay(r,g,b,a){
+        var canvas = document.createElement("canvas"),
+            ctx = canvas.getContext("2d");
+        var overlayImgData = ctx.createImageData(imgWidth,imgHeight);
+        for (var i=0;i<imgWidth;i++){
+            for (var j=0;j<imgHeight;j++){
+                var currentPixel = 4*imgWidth*j + 4* i;
+                overlayImgData.data[currentPixel] = r;
+                overlayImgData.data[currentPixel+1] = g;
+                overlayImgData.data[currentPixel+2] = b;
+                overlayImgData.data[currentPixel+3] = a;
+            }
+        }
+        return overlayImgData;
+    }
+
+    //图像AlphaBlend算法
+    function AlphaBlend(firstImg,secondImg,rate){
+        var returnData = createOverlay(0,0,0,255);
+        for (var i=0;i<imgWidth;i++){
+            for (var j=0;j<imgHeight;j++){
+                var currentPixel = 4*imgWidth*j + 4* i;
+                returnData.data[currentPixel] = rate*firstImg.data[currentPixel]+(1-rate)*secondImg.data[currentPixel];
+                returnData.data[currentPixel+1] = rate*firstImg.data[currentPixel+1]+(1-rate)*secondImg.data[currentPixel+1];
+                returnData.data[currentPixel+2] = rate*firstImg.data[currentPixel+2]+(1-rate)*secondImg.data[currentPixel+2];
+                returnData.data[currentPixel+2] = rate*firstImg.data[currentPixel+3]+(1-rate)*secondImg.data[currentPixel+3];
+            }
+        }
+        return returnData;
+    }
+
     //设置像素
     function setPixelInfo(data,num,r,g,b){
         data[num] = r;
@@ -130,6 +209,17 @@
     //清楚canvas
     function clearCanvas(){
         targetCtx.clearRect(0,0,imgWidth,imgHeight);
+    }
+
+    //计算高斯数
+    function setBlurArr(blur_percent,delta){
+        var blur = [];
+        for (var i= -delta;i<=delta;i++){
+            for (var j= -delta;j<=delta;j++){
+                blur.push((1/(2*Math.PI*blur_percent*blur_percent))*Math.pow(Math.E,(-(i*i+j*j)/(2*blur_percent*blur_percent))));
+            }
+        }
+        return blur;
     }
 
     //设置像素
