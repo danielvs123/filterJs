@@ -87,8 +87,8 @@
     filter.relief = function(){
         clearCanvas();
         var lastR= imgData.data[0],lastG= imgData.data[1],lastB= imgData.data[2];
-        for (var i=0;i<imgWidth;i++){
-            for (var j=0;j<imgHeight;j++){
+        for (var i=1;i<imgWidth;i++){
+            for (var j=1;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i;
                 var r = imgData.data[currentPixel],
                     g = imgData.data[currentPixel+1],
@@ -134,13 +134,13 @@
     //高斯特效
     filter.gaussBlur = function(){
         clearCanvas();
-        var emptyData = createOverlay(0,0,0,255),
-            delta = 2,
+        var emptyData = copyPic(imgData);
+            delta = 3,
             blur_percent =  0.84089642,
             blurArr = setBlurArr(blur_percent,delta),
             thisX = 0,thisY = 0;
-        for (var i=0;i<imgWidth;i++){
-            for (var j=0;j<imgHeight;j++){
+        for (var i=delta;i<imgWidth-delta;i++){
+            for (var j=delta;j<imgHeight-delta;j++){
                 var averageR = 0,averageG = 0,averageB = 0;
                 var percentageArr = 0;
                 for (var dx = -delta;dx<=delta;dx++){
@@ -167,10 +167,73 @@
                 emptyData.data[currentPixel+2] = averageB;
             }
         }
-        console.log(emptyData.data);
-        console.log(imgData.data);
-        targetCtx.putImageData(emptyData,0,0);
+        imgData = emptyData;
+        targetCtx.putImageData(imgData,0,0);
     };
+
+    //锐化处理
+    filter.sharpen = function(){
+        clearCanvas();
+        var emptyData = copyPic(imgData),
+            alpha = 0.3,
+            delta;
+        for (var i=1;i<imgWidth-1;i++) {
+            for (var j = 1; j < imgHeight-1; j++) {
+                var currentPixel = 4*imgWidth*j + 4* i,
+                    deltaR = 0,deltaG = 0,deltaB = 0;
+                for (var dx = -1;dx<=1;dx++){
+                    for (var dy = -1;dy<=1;dy++){
+                        var current = 4*imgWidth*(j+dy) + 4*(dx+i),
+                            r = (imgData.data[current])?imgData.data[current]:255,
+                            g = (imgData.data[current+1])?imgData.data[current+1]:255,
+                            b = (imgData.data[current+2])?imgData.data[current+2]:255;
+                        deltaR+=(r/8);
+                        deltaG+=(g/8);
+                        deltaB+=(b/8);
+                    }
+                }
+                var currentR = imgData.data[currentPixel],
+                    currentG = imgData.data[currentPixel+1],
+                    currentB = imgData.data[currentPixel+2];
+                deltaR = currentR -deltaR;
+                deltaG = currentG -deltaG;
+                deltaB = currentB -deltaB;
+                setPixelInfo(emptyData.data,currentPixel,currentR+deltaR*alpha,currentG+deltaG*alpha,currentB+deltaB*alpha);
+            }
+        }
+        imgData = emptyData;
+        targetCtx.putImageData(imgData,0,0);
+    };
+
+    //柔化处理
+    filter.soften = function(){
+        clearCanvas();
+        var emptyData = copyPic(imgData),
+            alpha = 0.3,
+            delta;
+        for (var i=1;i<imgWidth-1;i++) {
+            for (var j = 1; j < imgHeight-1; j++) {
+                var currentPixel = 4*imgWidth*j + 4* i,
+                    deltaR = 0,deltaG = 0,deltaB = 0;
+                for (var dx = -1;dx<=1;dx++){
+                    for (var dy = -1;dy<=1;dy++){
+                        var current = 4*imgWidth*(j+dy) + 4*(dx+i),
+                            r = (imgData.data[current])?imgData.data[current]:255,
+                            g = (imgData.data[current+1])?imgData.data[current+1]:255,
+                            b = (imgData.data[current+2])?imgData.data[current+2]:255;
+                        deltaR+=(r/9);
+                        deltaG+=(g/9);
+                        deltaB+=(b/9);
+                    }
+                }
+                emptyData.data[currentPixel] = deltaR;
+                emptyData.data[currentPixel+1] = deltaG;
+                emptyData.data[currentPixel+2] = deltaB;
+            }
+        }
+        imgData = emptyData;
+        targetCtx.putImageData(imgData,0,0);
+    }
 
     //RGB转HSV
     function RGBtoHSV(){
@@ -257,6 +320,21 @@
             }
         }
         return overlayImgData;
+    }
+
+    //深度复制
+    function copyPic(targetData){
+        var returnV = createOverlay(0,0,0,0);
+        for (var i=0;i<imgWidth;i++){
+            for (var j = 0;j<imgHeight;j++){
+                var c = 4*imgWidth*j+4*i;
+                returnV.data[c] = targetData.data[c];
+                returnV.data[c+1] = targetData.data[c+1];
+                returnV.data[c+2] = targetData.data[c+2];
+                returnV.data[c+3] = targetData.data[c+3];
+            }
+        }
+        return returnV;
     }
 
     //图像AlphaBlend算法
