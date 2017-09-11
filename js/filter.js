@@ -2,7 +2,7 @@
  * Created by DanielZhang on 2017/9/10.
  */
 ;(function ( filter, undefined ){
-    var imgData,
+    var originData,
         targetCanvas,
         targetCtx,
         imgWidth,
@@ -18,7 +18,7 @@
         targetCanvas.height = imgHeight;
         targetCtx = targetCanvas.getContext("2d");
         targetCtx.drawImage(div,0,0,imgWidth,imgHeight);
-        imgData = targetCtx.getImageData(0,0,imgWidth,imgHeight);
+        originData = targetCtx.getImageData(0,0,imgWidth,imgHeight);
 
         fatherDiv.appendChild(targetCanvas);
     };
@@ -29,12 +29,12 @@
         for (var i=0;i<imgWidth;i++){
             for (var j=0;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i,
-                    info = analysisPixel(imgData.data,currentPixel),
+                    info = analysisPixel(originData.data,currentPixel),
                     gray = 0.3*info.r+0.59*info.g+0.11*info.b;
-                setPixelInfo(imgData.data,currentPixel,gray,gray,gray);
+                setPixelInfo(originData.data,currentPixel,gray,gray,gray);
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //平均值灰度法
@@ -43,17 +43,17 @@
         for (var i=0;i<imgWidth;i++){
             for (var j=0;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i,
-                    info = analysisPixel(imgData.data,currentPixel),
+                    info = analysisPixel(originData.data,currentPixel),
                     average = (info.r+info.g+info.b)/3;
-                setPixelInfo(imgData.data,currentPixel,average,average,average);
+                setPixelInfo(originData.data,currentPixel,average,average,average);
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //绘制普通图
     filter.printOriginal = function(){
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //最大值灰度法
@@ -62,12 +62,12 @@
         for (var i=0;i<imgWidth;i++){
             for (var j=0;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i,
-                    info = analysisPixel(imgData.data,currentPixel),
+                    info = analysisPixel(originData.data,currentPixel),
                     gray = Math.max(info.r,info.g,info.b);
-                setPixelInfo(imgData.data,currentPixel,gray,gray,gray);
+                setPixelInfo(originData.data,currentPixel,gray,gray,gray);
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //反转颜色
@@ -76,39 +76,39 @@
         for (var i=0;i<imgWidth;i++){
             for (var j=0;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i,
-                    info = analysisPixel(imgData.data,currentPixel);
-                setPixelInfo(imgData.data,currentPixel,255-info.r,255-info.g,255-info.b);
+                    info = analysisPixel(originData.data,currentPixel);
+                setPixelInfo(originData.data,currentPixel,255-info.r,255-info.g,255-info.b);
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //浮雕算法
     filter.relief = function(){
         clearCanvas();
-        var lastR= imgData.data[0],lastG= imgData.data[1],lastB= imgData.data[2];
+        var lastR= originData.data[0],lastG= originData.data[1],lastB= originData.data[2];
         for (var i=1;i<imgWidth;i++){
             for (var j=1;j<imgHeight;j++){
                 var currentPixel = 4*imgWidth*j + 4* i;
-                var r = imgData.data[currentPixel],
-                    g = imgData.data[currentPixel+1],
-                    b = imgData.data[currentPixel+2];
-                imgData.data[currentPixel] +=(128-lastR);
-                imgData.data[currentPixel+1] +=(128-lastG);
-                imgData.data[currentPixel+2] +=(128-lastB);
+                var r = originData.data[currentPixel],
+                    g = originData.data[currentPixel+1],
+                    b = originData.data[currentPixel+2];
+                originData.data[currentPixel] +=(128-lastR);
+                originData.data[currentPixel+1] +=(128-lastG);
+                originData.data[currentPixel+2] +=(128-lastB);
                 lastR = r;
                 lastG = g;
                 lastB = b;
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //雾化算法
     filter.fog = function(threshold){
         clearCanvas();
         threshold = (threshold)?threshold:10;
-        var lastR= imgData.data[0],lastG= imgData.data[1],lastB= imgData.data[2];
+        var lastR= originData.data[0],lastG= originData.data[1],lastB= originData.data[2];
         for (var i=0;i<imgWidth;i++){
             for (var j=0;j<imgHeight;j++){
                 var num = Math.floor(Math.random()*threshold);
@@ -117,24 +117,24 @@
                 (j+num)<=imgHeight?deltaY=j+num:deltaY = j-1;
                 var currentPixel = 4*imgWidth*j + 4* i;
                 var deltaPixel = 4*imgWidth*deltaY+4*deltaX;
-                imgData.data[currentPixel]=imgData.data[deltaPixel];
-                imgData.data[currentPixel+1]=imgData.data[deltaPixel+1];
-                imgData.data[currentPixel+2]=imgData.data[deltaPixel+2];
+                originData.data[currentPixel]=originData.data[deltaPixel];
+                originData.data[currentPixel+1]=originData.data[deltaPixel+1];
+                originData.data[currentPixel+2]=originData.data[deltaPixel+2];
             }
         }
-        targetCtx.putImageData(imgData,0,0);
+        targetCtx.putImageData(originData,0,0);
     };
 
     //老照片算法
     filter.oldPhoto = function(){
         targetCtx.putImageData(createOverlay(153,253,153,188),0,0);
-        //targetCtx.putImageData(AlphaBlend(imgData,createOverlay(153,253,153,255),0.5),0,0);
+        //targetCtx.putImageData(AlphaBlend(originData,createOverlay(153,253,153,255),0.5),0,0);
     };
 
     //高斯特效
     filter.gaussBlur = function(){
         clearCanvas();
-        var emptyData = copyPic(imgData);
+        var emptyData = copyPic(originData);
             delta = 3,
             blur_percent =  0.84089642,
             blurArr = setBlurArr(blur_percent,delta),
@@ -150,9 +150,9 @@
                             deltaY = j+ dy,
                             deltaNumber = 4*(deltaX + deltaY*(imgWidth));
                         if ((i+dx)>=0&&(i+dx)<= imgWidth&&(j+dy)>=0&&(j+dy)<= imgHeight){
-                            averageR += imgData.data[deltaNumber]*blurArr[currentL];
-                            averageG += imgData.data[deltaNumber+1]*blurArr[currentL];
-                            averageB += imgData.data[deltaNumber+2]*blurArr[currentL];
+                            averageR += originData.data[deltaNumber]*blurArr[currentL];
+                            averageG += originData.data[deltaNumber+1]*blurArr[currentL];
+                            averageB += originData.data[deltaNumber+2]*blurArr[currentL];
                         }else{
                             averageR += 255*blurArr[currentL];
                             averageG += 255*blurArr[currentL];
@@ -167,14 +167,14 @@
                 emptyData.data[currentPixel+2] = averageB;
             }
         }
-        imgData = emptyData;
-        targetCtx.putImageData(imgData,0,0);
+        originData = emptyData;
+        targetCtx.putImageData(originData,0,0);
     };
 
     //锐化处理
     filter.sharpen = function(){
         clearCanvas();
-        var emptyData = copyPic(imgData),
+        var emptyData = copyPic(originData),
             alpha = 0.3,
             delta;
         for (var i=1;i<imgWidth-1;i++) {
@@ -184,31 +184,31 @@
                 for (var dx = -1;dx<=1;dx++){
                     for (var dy = -1;dy<=1;dy++){
                         var current = 4*imgWidth*(j+dy) + 4*(dx+i),
-                            r = (imgData.data[current])?imgData.data[current]:255,
-                            g = (imgData.data[current+1])?imgData.data[current+1]:255,
-                            b = (imgData.data[current+2])?imgData.data[current+2]:255;
+                            r = (originData.data[current])?originData.data[current]:255,
+                            g = (originData.data[current+1])?originData.data[current+1]:255,
+                            b = (originData.data[current+2])?originData.data[current+2]:255;
                         deltaR+=(r/8);
                         deltaG+=(g/8);
                         deltaB+=(b/8);
                     }
                 }
-                var currentR = imgData.data[currentPixel],
-                    currentG = imgData.data[currentPixel+1],
-                    currentB = imgData.data[currentPixel+2];
+                var currentR = originData.data[currentPixel],
+                    currentG = originData.data[currentPixel+1],
+                    currentB = originData.data[currentPixel+2];
                 deltaR = currentR -deltaR;
                 deltaG = currentG -deltaG;
                 deltaB = currentB -deltaB;
                 setPixelInfo(emptyData.data,currentPixel,currentR+deltaR*alpha,currentG+deltaG*alpha,currentB+deltaB*alpha);
             }
         }
-        imgData = emptyData;
-        targetCtx.putImageData(imgData,0,0);
+        originData = emptyData;
+        targetCtx.putImageData(originData,0,0);
     };
 
     //柔化处理
     filter.soften = function(){
         clearCanvas();
-        var emptyData = copyPic(imgData),
+        var emptyData = copyPic(originData),
             alpha = 0.3,
             delta;
         for (var i=1;i<imgWidth-1;i++) {
@@ -218,9 +218,9 @@
                 for (var dx = -1;dx<=1;dx++){
                     for (var dy = -1;dy<=1;dy++){
                         var current = 4*imgWidth*(j+dy) + 4*(dx+i),
-                            r = (imgData.data[current])?imgData.data[current]:255,
-                            g = (imgData.data[current+1])?imgData.data[current+1]:255,
-                            b = (imgData.data[current+2])?imgData.data[current+2]:255;
+                            r = (originData.data[current])?originData.data[current]:255,
+                            g = (originData.data[current+1])?originData.data[current+1]:255,
+                            b = (originData.data[current+2])?originData.data[current+2]:255;
                         deltaR+=(r/9);
                         deltaG+=(g/9);
                         deltaB+=(b/9);
@@ -231,9 +231,83 @@
                 emptyData.data[currentPixel+2] = deltaB;
             }
         }
-        imgData = emptyData;
-        targetCtx.putImageData(imgData,0,0);
-    }
+        originData = emptyData;
+        targetCtx.putImageData(originData,0,0);
+    };
+
+    //对比度变化
+    filter.contrast = function(percent){
+        clearCanvas();
+        var average={
+                r:0,
+                g:0,
+                b:0
+            },
+            totalNum = originData.data.length/4;
+        for (var i = 0;i<(totalNum);i++){
+            var currentNum = 4*i;
+            average.r += (originData.data[currentNum]/totalNum);
+            average.g += (originData.data[currentNum+1]/totalNum);
+            average.b += (originData.data[currentNum+2]/totalNum);
+        }
+        for (var i=0;i<(totalNum);i++){
+            currentNum = 4*i;
+            originData.data[currentNum] = average.r + (originData.data[currentNum] - average.r)*(1+percent);
+            originData.data[currentNum+1] = average.g + (originData.data[currentNum+1] - average.g)*(1+percent);
+            originData.data[currentNum+2] = average.b + (originData.data[currentNum+2] - average.b)*(1+percent);
+        }
+        targetCtx.putImageData(originData,0,0);
+    };
+
+    //直方图均衡化
+    filter.histogramEqualization = function(){
+        imgData = originData.data;
+        var grayAverage = [],hisData = [];
+        //先灰度化
+        for (var i=0;i<(imgData.length/4);i++){
+            var currentNum = 4*i;
+            grayAverage.push(findLowest(imgData[currentNum],imgData[currentNum+1],imgData[currentNum+2]));
+            var low = findLowest(imgData[currentNum],imgData[currentNum+1],imgData[currentNum+2]);
+            imgData[currentNum] = low;
+            imgData[currentNum+1] = low;
+            imgData[currentNum+2] = low;
+        }
+        for (var i=0;i<256;i++){
+            hisData.push(0);
+        }
+        for (var j=0;j<grayAverage.length;j++){
+            var current = grayAverage[j];
+            hisData[current] = hisData[current]+1;
+        }
+
+        var cdbArr = [];
+        var hNumber = [];
+        for (var i=0;i<256;i++){
+            var num = ((i==0)?0:cdbArr[i-1]);
+            cdbArr.push(num+hisData[i]);
+        }
+        var cdfMin = 9999999,cdfMax = 0;
+        for (var i=0;i<256;i++){
+            var num = cdbArr[i];
+            if (num>cdfMax){
+                cdfMax = cdbArr[i];
+            }
+            if (num<cdfMin && num!=0){
+                cdfMin = cdbArr[i];
+            }
+        }
+        for (var i=0;i<256;i++){
+            var number = Math.abs((cdbArr[i]-cdfMin)/(imgWidth*imgHeight-cdfMin)*255);
+            hNumber.push(number);
+        }
+        for (var i=0;i<(imgData.length/4);i++){
+            var currentNum = 4*i;
+            imgData[currentNum] = hNumber[imgData[currentNum]];
+            imgData[currentNum+1] = hNumber[imgData[currentNum+1]];
+            imgData[currentNum+2] = hNumber[imgData[currentNum+2]];
+        }
+        targetCtx.putImageData(originData,0,0);
+    };
 
     //RGB转HSV
     function RGBtoHSV(){
@@ -245,9 +319,9 @@
                     currentLocation = 4*imgWidth*j + 4*i,
                     maxRGB =  getMaxRGB(currentLocation),
                     minRGB =  getMinRGB(currentLocation),
-                    R =imgData.data[currentLocation],
-                    G =imgData.data[currentLocation+1],
-                    B =imgData.data[currentLocation+2];
+                    R =originData.data[currentLocation],
+                    G =originData.data[currentLocation+1],
+                    B =originData.data[currentLocation+2];
                 obj.V = maxRGB;
                 obj.S = obj.V - minRGB;
                 if (R==maxRGB){
@@ -276,9 +350,9 @@
                     currentLocation = 4*imgWidth*j + 4*i,
                     maxRGB =  getMaxRGB(currentLocation),
                     minRGB =  getMinRGB(currentLocation),
-                    R =imgData.data[currentLocation],
-                    G =imgData.data[currentLocation+1],
-                    B =imgData.data[currentLocation+2];
+                    R =originData.data[currentLocation],
+                    G =originData.data[currentLocation+1],
+                    B =originData.data[currentLocation+2];
                 obj.L = maxRGB/2 + minRGB/2;
                 obj.S = obj.V - minRGB;
                 if (R==maxRGB){
@@ -298,11 +372,11 @@
     }
 
     function getMinRGB(location){
-        return (Math.min(Math.min(imgData.data[location],imgData.data[location+1]),imgData.data[location+2]));
+        return (Math.min(Math.min(originData.data[location],originData.data[location+1]),originData.data[location+2]));
     }
 
     function getMaxRGB(location){
-        return (Math.max(Math.max(imgData.data[location],imgData.data[location+1]),imgData.data[location+2]));
+        return (Math.max(Math.max(originData.data[location],originData.data[location+1]),originData.data[location+2]));
     }
 
     //用来制作叠加图层
@@ -362,6 +436,18 @@
     //清楚canvas
     function clearCanvas(){
         targetCtx.clearRect(0,0,imgWidth,imgHeight);
+    }
+
+    //寻找rgb最小
+    function findLowest(a,b,c){
+        var lowest = a;
+        if (a>b){
+            lowest = b;
+        }
+        if (a>c){
+            lowest = c;
+        }
+        return lowest;
     }
 
     //计算高斯数
