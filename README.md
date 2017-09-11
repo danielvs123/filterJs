@@ -8,7 +8,10 @@ filter.js需要被引用
 
         
         加载图片
-        filter.loadImgDiv("读取的img","嵌套在的父页面",宽度||不是必须，高度||不是必须);
+        filter.loadImgDiv("读取的img","嵌套在的父页面","宽度||不是必须","高度||不是必须");
+
+        未处理图片打印
+        filter.printOriginal();
 
         调用加权灰度
         filter.weightedGray();

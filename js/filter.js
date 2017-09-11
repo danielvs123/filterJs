@@ -51,6 +51,11 @@
         targetCtx.putImageData(imgData,0,0);
     };
 
+    //绘制普通图
+    filter.printOriginal = function(){
+        targetCtx.putImageData(imgData,0,0);
+    };
+
     //最大值灰度法
     filter.maximumGray = function(){
         clearCanvas();
@@ -166,6 +171,76 @@
         console.log(imgData.data);
         targetCtx.putImageData(emptyData,0,0);
     };
+
+    //RGB转HSV
+    function RGBtoHSV(){
+        var hsvArr = [];
+        for (var j = 0;j<imgHeight;j++){
+            hsvArr[j] = [];
+            for (var i = 0;i<imgWidth;i++){
+                var obj = {H:0,S:0,V:0},
+                    currentLocation = 4*imgWidth*j + 4*i,
+                    maxRGB =  getMaxRGB(currentLocation),
+                    minRGB =  getMinRGB(currentLocation),
+                    R =imgData.data[currentLocation],
+                    G =imgData.data[currentLocation+1],
+                    B =imgData.data[currentLocation+2];
+                obj.V = maxRGB;
+                obj.S = obj.V - minRGB;
+                if (R==maxRGB){
+                    if(G>=B){
+                        obj.H = 60*(G-B)/(obj.V-minRGB);
+                    }else{
+                        obj.H = 60*(G-B)/(obj.V-minRGB) + 360;
+                    }
+                }else if (G==maxRGB){
+                    obj.H = (60*(B-R))/(obj.V-minRGB) + 120;
+                }else if (B==maxRGB){
+                    obj.H = (60*(R-G))/(obj.V-minRGB) + 240;
+                }
+                hsvArr[j][i] = obj;
+            }
+        }
+    }
+
+    //RGB转HSL
+    function RGBtoHSL(){
+        var hsvArr = [];
+        for (var j = 0;j<imgHeight;j++){
+            hsvArr[j] = [];
+            for (var i = 0;i<imgWidth;i++){
+                var obj = {H:0,S:0,L:0},
+                    currentLocation = 4*imgWidth*j + 4*i,
+                    maxRGB =  getMaxRGB(currentLocation),
+                    minRGB =  getMinRGB(currentLocation),
+                    R =imgData.data[currentLocation],
+                    G =imgData.data[currentLocation+1],
+                    B =imgData.data[currentLocation+2];
+                obj.L = maxRGB/2 + minRGB/2;
+                obj.S = obj.V - minRGB;
+                if (R==maxRGB){
+                    if(G>=B){
+                        obj.H = 60*(G-B)/(maxRGB-minRGB);
+                    }else{
+                        obj.H = 60*(G-B)/(maxRGB-minRGB) + 360;
+                    }
+                }else if (G==maxRGB){
+                    obj.H = (60*(B-R))/(maxRGB-minRGB) + 120;
+                }else if (B==maxRGB){
+                    obj.H = (60*(R-G))/(maxRGB-minRGB) + 240;
+                }
+                hsvArr[j][i] = obj;
+            }
+        }
+    }
+
+    function getMinRGB(location){
+        return (Math.min(Math.min(imgData.data[location],imgData.data[location+1]),imgData.data[location+2]));
+    }
+
+    function getMaxRGB(location){
+        return (Math.max(Math.max(imgData.data[location],imgData.data[location+1]),imgData.data[location+2]));
+    }
 
     //用来制作叠加图层
     function createOverlay(r,g,b,a){
