@@ -127,7 +127,7 @@
 
     //老照片算法
     filter.oldPhoto = function(){
-        targetCtx.putImageData(createOverlay(153,253,153,188),0,0);
+        targetCtx.putImageData(layerBlending("darken",originData,createOverlay(128,128,128,128)),0,0);
         //targetCtx.putImageData(AlphaBlend(originData,createOverlay(153,253,153,255),0.5),0,0);
     };
 
@@ -259,6 +259,58 @@
         targetCtx.putImageData(originData,0,0);
     };
 
+    //旋转模糊 intensity是阈值
+    filter.rotateBlur = function(cenX,cenY,intensity){
+        var newImgDiv = copyPic(originData);
+        for (var j = 0;j<imgHeight;j++){
+            for (var i = 0;i<imgWidth;i++){
+                var dis = Math.sqrt((j-cenY)*(j-cenY)+(i-cenX)*(i-cenX)),
+                    angle = Math.atan2((j-cenY),(i-cenX)),
+                    r = 0,g = 0,b = 0;
+                for (var n = 0; n<intensity;n++){
+                    angle = angle + 0.05;
+                    var newX = parseInt(dis*Math.cos(angle)+cenX),
+                        newY = parseInt(dis*Math.sin(angle)+cenY);
+                    newX = Math.min(imgWidth-1,Math.max(0,newX));
+                    newY = Math.min(imgHeight-1,Math.max(0,newY));
+                    var currentLocation = newY*(imgWidth)*4+4*newX;
+                    r += parseInt(originData.data[currentLocation]);
+                    g += parseInt(originData.data[currentLocation+1]);
+                    b += parseInt(originData.data[currentLocation+2]);
+                }
+                var cl = j*imgWidth*4+4*i;
+                newImgDiv.data[cl] = Math.min(255,Math.max(0,r/intensity));
+                newImgDiv.data[cl+1] = Math.min(255,Math.max(0,g/intensity));
+                newImgDiv.data[cl+2] = Math.min(255,Math.max(0,b/intensity));
+            }
+        }
+        originData = newImgDiv;
+        targetCtx.putImageData(originData,0,0);
+    };
+
+    //中心旋转模糊
+    filter.centerRotateBlur = function(intensity){
+        filter.rotateBlur(parseInt(imgWidth/2),parseInt(imgHeight/2),intensity);
+    };
+
+    //霓虹特效
+    filter.neon = function(){
+        clearCanvas();
+        var newDataValue = copyPic(originData);
+        for (var i=1;i<imgWidth;i++){
+            for (var j=1;j<imgHeight;j++){
+                var currentPixel = getPixelNum(i,j);
+                for (var n = 0;n<3;n++){
+                    var minus2Pixel = getPixelNum(i-1,j-1),
+                        plus1Pixel = getPixelNum(i,j+1);
+                    newDataValue.data[currentPixel+n] = (Math.pow((originData.data[currentPixel+n]-originData.data[minus2Pixel+n]),2) + Math.pow((originData.data[currentPixel+n]-originData.data[plus1Pixel+n]),2));
+                }
+            }
+        }
+        originData = newDataValue;
+        targetCtx.putImageData(originData,0,0);
+    };
+
     //直方图均衡化
     filter.histogramEqualization = function(){
         imgData = originData.data;
@@ -308,6 +360,40 @@
         }
         targetCtx.putImageData(originData,0,0);
     };
+
+    //图像融合的内部函数接口
+    function layerBlending(type,first,second){
+        switch (type) {
+            case "darken":
+                //变暗融合
+                layerDarken(first,second);
+                return imgData;
+                break;
+        }
+    }
+
+    //图层融合的算法集合
+    function layerDarken(first,second){
+        var returnV = createOverlay(0,0,0,255);
+        for (var i = 0;i<imgWidth;i++){
+            for (var j = 0;j<imgHeight;j++){
+                var currentPixel = getPixelNum(i,j);
+                returnV.data[currentPixel] = getLargerDataNum(first,second,currentPixel);
+                returnV.data[currentPixel+1] = getLargerDataNum(first,second,currentPixel+1);
+                returnV.data[currentPixel+2] = getLargerDataNum(first,second,currentPixel+2);
+            }
+        }
+        imgData = returnV;
+    }
+
+    //返回当前pixel位置
+    function getPixelNum(x,y){
+        return 4*imgWidth*y + 4* x;
+    }
+
+    function getLargerDataNum(first,second,num){
+        return Math.max(first.data[num],second.data[num]);
+    }
 
     //RGB转HSV
     function RGBtoHSV(){
