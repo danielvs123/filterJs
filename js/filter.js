@@ -361,6 +361,36 @@
         targetCtx.putImageData(originData,0,0);
     };
 
+    //球面滤镜
+    filter.spherize = function(){
+        var radius = 0,
+            newX = 0,
+            newY = 0,
+            radian = 0,
+            offsetX = 0,
+            offsetY = 0,
+            cenX = parseInt(imgWidth/2),
+            cenY = parseInt(imgHeight/2);
+        var newImgDiv = createOverlay(0,0,0,255);
+        for (var j = 0;j<imgHeight;j++){
+            for (var i = 0;i<imgWidth;i++) {
+                offsetX = i-cenX;
+                offsetY = j-cenY;
+                radian = Math.atan2(offsetY,offsetX);
+                radius = parseInt((offsetX * offsetX + offsetY * offsetY) / Math.max(cenX, cenY));
+                newX = parseInt(radius * Math.cos(radian)) + cenX;
+                newY = parseInt(radius * Math.sin(radian)) + cenY;
+                newX = Math.min(imgWidth - 1, Math.max(0, newX));
+                newY = Math.min(imgHeight - 1, Math.max(0, newY));
+                var localLocation = getPixelNum(i,j),
+                    offSetLocation = getPixelNum(newX,newY);
+                setPixelInfo(newImgDiv.data,localLocation,originData.data[offSetLocation],originData.data[offSetLocation+1],originData.data[offSetLocation+2]);
+            }
+        }
+        originData = newImgDiv;
+        targetCtx.putImageData(originData,0,0);
+    };
+
     //图像融合的内部函数接口
     function layerBlending(type,first,second){
         switch (type) {
